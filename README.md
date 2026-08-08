@@ -106,12 +106,72 @@ Then start the dev server:
 npx expo start --dev-client
 ```
 
+### Getting it on your phone (Xcode)
+
+There is no `ios/` folder in the repo — it is generated on demand and
+gitignored. You do **not** need `ascAppId` or `appleTeamId` for this; those are
+only for automated App Store submission.
+
+First, change `expo.ios.bundleIdentifier` in `app.json` to something you own,
+e.g. `com.yourname.theoryoftime`. Change it there rather than in Xcode, because
+`prebuild` overwrites the Xcode copy.
+
+1. **Get the code and install.**
+   ```bash
+   npm install
+   ```
+2. **Generate the Xcode project.** This creates `ios/` and runs `pod install`.
+   ```bash
+   npx expo prebuild --platform ios
+   ```
+3. **Enable Developer Mode on the phone.** iOS 16+ requires it and it is the
+   step most often missed: Settings → Privacy & Security → Developer Mode → On.
+   The phone reboots.
+4. **Open the workspace** — the `.xcworkspace`, not the `.xcodeproj`, or
+   CocoaPods will not be linked.
+   ```bash
+   open ios/TheoryofTime.xcworkspace
+   ```
+5. **Set up signing.** Select the `TheoryofTime` target → Signing &
+   Capabilities → tick *Automatically manage signing* → choose your Team. A
+   free Apple ID works; add it under Xcode → Settings → Accounts.
+6. **Switch to Release.** Product → Scheme → Edit Scheme → Run → Build
+   Configuration → *Release*. In Debug the JS is served from Metro, so the app
+   will not launch once the phone is unplugged. Release bundles the JS in.
+7. **Select the device** in the toolbar and press ⌘R.
+8. **Trust the certificate.** The first launch fails with "Untrusted
+   Developer". On the phone: Settings → General → VPN & Device Management →
+   your Apple ID → Trust. Reopen the app.
+
+Steps 2, 4 and 7 collapse into one command if you would rather skip Xcode:
+
+```bash
+npx expo run:ios --device --configuration Release
+```
+
+**Free-signing caveat:** an unpaid Apple ID issues a 7-day provisioning
+profile, so the app stops launching after a week until you rebuild, and you are
+limited to three sideloaded apps. A paid developer account extends this to a
+year.
+
+### Where the build artefacts live
+
+| What | Where |
+| --- | --- |
+| Generated Xcode project | `ios/TheoryofTime.xcworkspace` (after `expo prebuild`) |
+| Compiled `.app` | `~/Library/Developer/Xcode/DerivedData/TheoryofTime-*/Build/Products/` |
+| EAS cloud builds | Download link on expo.dev, plus an email |
+| `expo export` output | Your `--output-dir`; only needed for OTA updates, not for Xcode |
+
 ### Production build & submission
 
-Fill in your identifiers first:
+Only needed to ship through the App Store. Fill in your identifiers first:
 
 - `app.json` → `expo.ios.bundleIdentifier` (currently `com.theoryoftime.app`)
-- `eas.json` → `submit.production.ios.ascAppId` and `appleTeamId`
+- `eas.json` → `submit.production.ios.ascAppId` — the app's numeric ID from
+  App Store Connect, visible in the URL once you create the app record
+- `eas.json` → `submit.production.ios.appleTeamId` — from
+  developer.apple.com → Membership details
 
 ```bash
 npx eas build --profile production --platform ios
