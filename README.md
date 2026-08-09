@@ -129,36 +129,47 @@ e.g. `com.yourname.theoryoftime` — the default may already be claimed.
 
 ### Or build locally with Xcode
 
-There is no `ios/` folder in the repo; it is generated on demand and
-gitignored. You do **not** need `ascAppId` or `appleTeamId` for this — those are
-only for automated App Store submission.
+> **Do not create a new project in Xcode.** There is no `ios/` folder in this
+> repo — the Xcode project is *generated* from the source by `expo prebuild`.
+> If you see a list of dates with an "Edit" button and a "+", you are looking at
+> Xcode's own blank template, not this app.
 
-1. `npm install`
-2. `npx expo prebuild --platform ios` — creates `ios/` and runs `pod install`
-3. **Point Xcode at Node**, or the build script fails with `env: node: No such
-   file or directory`:
-   ```bash
-   echo "export NODE_BINARY=$(which node)" > ios/.xcode.env.local
-   ```
-4. **Enable Developer Mode on the phone** (iOS 16+): Settings → Privacy &
-   Security → Developer Mode → On. The phone reboots.
-5. `open ios/TheoryofTime.xcworkspace` — the **workspace**, not the
-   `.xcodeproj`, or none of the pods are linked.
-6. **Signing:** select the `TheoryofTime` target → Signing & Capabilities →
-   tick *Automatically manage signing* → choose your Team.
-7. **Switch to Release:** Product → Scheme → Edit Scheme → Run → Build
-   Configuration → *Release*. Debug loads JS from Metro and dies when you
-   unplug.
-8. Select the device in the toolbar and press ⌘R.
-9. **Trust the certificate:** Settings → General → VPN & Device Management →
-   your Apple ID → Trust.
-
-Steps 2, 5 and 8 collapse into one command if you would rather skip the Xcode
-UI (you still need steps 3, 4 and 9):
+One command does the whole setup — dependencies, project generation, the Node
+path fix, and opening the workspace:
 
 ```bash
-npx expo run:ios --device --configuration Release
+./scripts/ios-setup.sh
 ```
+
+Then, inside Xcode:
+
+1. Select the **TheoryofTime** target → Signing & Capabilities → tick
+   *Automatically manage signing* → choose your Team. (Add a free Apple ID
+   first under Xcode → Settings → Accounts.)
+2. Product → Scheme → Edit Scheme → Run → Build Configuration → **Release**.
+   Debug loads JS from Metro and dies when you unplug.
+3. Pick your iPhone from the device dropdown and press ⌘R.
+
+On the phone, first launch needs:
+
+- Settings → Privacy & Security → **Developer Mode** → On (iOS 16+, reboots)
+- Settings → General → VPN & Device Management → your Apple ID → **Trust**
+
+<details>
+<summary>What the script does, if you would rather run it by hand</summary>
+
+```bash
+npm install
+npx expo prebuild --platform ios --clean          # generates ios/
+echo "export NODE_BINARY=$(which node)" > ios/.xcode.env.local
+open ios/TheoryofTime.xcworkspace                 # the WORKSPACE, not .xcodeproj
+```
+
+The `.xcode.env.local` line matters: Xcode does not inherit your shell `PATH`,
+so a Node installed via nvm or Homebrew is invisible to it and the build fails
+with `env: node: No such file or directory`.
+
+</details>
 
 **Free-signing caveat:** an unpaid Apple ID issues a 7-day provisioning
 profile, so the app stops launching after a week until you rebuild, and you are

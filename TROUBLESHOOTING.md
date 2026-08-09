@@ -53,7 +53,23 @@ sideloading. A paid account ($99/yr) gets you a year and TestFlight.
 
 ## If you insist on Xcode
 
-These are the failures that actually happen, roughly in order of frequency.
+Run `./scripts/ios-setup.sh` from the repo root. It handles everything below
+that can be automated. The failures that remain, roughly in order of frequency:
+
+### You are looking at a list of dates with an "Edit" button and a "+"
+
+That is **Xcode's own blank app template**, not this project. It happens when
+you open Xcode and choose *File → New → Project*.
+
+Never create a project in Xcode for this app. There is no `ios/` folder in the
+repo — the Xcode project does not exist until it is generated from the source:
+
+```bash
+./scripts/ios-setup.sh          # or: npx expo prebuild --platform ios --clean
+```
+
+That produces `ios/TheoryofTime.xcworkspace`, which is the only thing you
+should ever open.
 
 ### "Command PhaseScriptExecution failed" / "env: node: No such file or directory"
 
