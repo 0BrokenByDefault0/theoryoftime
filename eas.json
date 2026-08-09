@@ -1,20 +1,28 @@
 {
   "cli": {
     "version": ">= 12.0.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
+    "device": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Release"
+      }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": true
+        "simulator": false
       }
     },
-    "preview": {
+    "simulator": {
+      "developmentClient": true,
       "distribution": "internal",
       "ios": {
-        "simulator": false
+        "simulator": true
       }
     },
     "production": {

@@ -106,44 +106,55 @@ Then start the dev server:
 npx expo start --dev-client
 ```
 
-### Getting it on your phone (Xcode)
+### Getting it on your phone
 
-There is no `ios/` folder in the repo — it is generated on demand and
-gitignored. You do **not** need `ascAppId` or `appleTeamId` for this; those are
-only for automated App Store submission.
+**Recommended: build in the cloud, no Xcode required.** See
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md) for the full walkthrough and for every
+Xcode failure worth knowing about.
+
+```bash
+npm install -g eas-cli
+eas login
+eas build:configure
+eas device:create                            # register your phone (do this on the phone)
+eas build --profile device --platform ios    # ~15 min, then scan the QR code
+```
+
+Use the **`device`** profile. The `simulator` profile produces a build that
+cannot be installed on a phone, and `development` needs Metro running on your
+laptop to launch.
 
 First, change `expo.ios.bundleIdentifier` in `app.json` to something you own,
-e.g. `com.yourname.theoryoftime`. Change it there rather than in Xcode, because
-`prebuild` overwrites the Xcode copy.
+e.g. `com.yourname.theoryoftime` — the default may already be claimed.
 
-1. **Get the code and install.**
-   ```bash
-   npm install
-   ```
-2. **Generate the Xcode project.** This creates `ios/` and runs `pod install`.
-   ```bash
-   npx expo prebuild --platform ios
-   ```
-3. **Enable Developer Mode on the phone.** iOS 16+ requires it and it is the
-   step most often missed: Settings → Privacy & Security → Developer Mode → On.
-   The phone reboots.
-4. **Open the workspace** — the `.xcworkspace`, not the `.xcodeproj`, or
-   CocoaPods will not be linked.
-   ```bash
-   open ios/TheoryofTime.xcworkspace
-   ```
-5. **Set up signing.** Select the `TheoryofTime` target → Signing &
-   Capabilities → tick *Automatically manage signing* → choose your Team. A
-   free Apple ID works; add it under Xcode → Settings → Accounts.
-6. **Switch to Release.** Product → Scheme → Edit Scheme → Run → Build
-   Configuration → *Release*. In Debug the JS is served from Metro, so the app
-   will not launch once the phone is unplugged. Release bundles the JS in.
-7. **Select the device** in the toolbar and press ⌘R.
-8. **Trust the certificate.** The first launch fails with "Untrusted
-   Developer". On the phone: Settings → General → VPN & Device Management →
-   your Apple ID → Trust. Reopen the app.
+### Or build locally with Xcode
 
-Steps 2, 4 and 7 collapse into one command if you would rather skip Xcode:
+There is no `ios/` folder in the repo; it is generated on demand and
+gitignored. You do **not** need `ascAppId` or `appleTeamId` for this — those are
+only for automated App Store submission.
+
+1. `npm install`
+2. `npx expo prebuild --platform ios` — creates `ios/` and runs `pod install`
+3. **Point Xcode at Node**, or the build script fails with `env: node: No such
+   file or directory`:
+   ```bash
+   echo "export NODE_BINARY=$(which node)" > ios/.xcode.env.local
+   ```
+4. **Enable Developer Mode on the phone** (iOS 16+): Settings → Privacy &
+   Security → Developer Mode → On. The phone reboots.
+5. `open ios/TheoryofTime.xcworkspace` — the **workspace**, not the
+   `.xcodeproj`, or none of the pods are linked.
+6. **Signing:** select the `TheoryofTime` target → Signing & Capabilities →
+   tick *Automatically manage signing* → choose your Team.
+7. **Switch to Release:** Product → Scheme → Edit Scheme → Run → Build
+   Configuration → *Release*. Debug loads JS from Metro and dies when you
+   unplug.
+8. Select the device in the toolbar and press ⌘R.
+9. **Trust the certificate:** Settings → General → VPN & Device Management →
+   your Apple ID → Trust.
+
+Steps 2, 5 and 8 collapse into one command if you would rather skip the Xcode
+UI (you still need steps 3, 4 and 9):
 
 ```bash
 npx expo run:ios --device --configuration Release
@@ -160,7 +171,7 @@ year.
 | --- | --- |
 | Generated Xcode project | `ios/TheoryofTime.xcworkspace` (after `expo prebuild`) |
 | Compiled `.app` | `~/Library/Developer/Xcode/DerivedData/TheoryofTime-*/Build/Products/` |
-| EAS cloud builds | Download link on expo.dev, plus an email |
+| EAS cloud builds | QR code + URL in the terminal, and on expo.dev |
 | `expo export` output | Your `--output-dir`; only needed for OTA updates, not for Xcode |
 
 ### Production build & submission
