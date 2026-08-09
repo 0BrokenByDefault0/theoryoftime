@@ -79,6 +79,79 @@ sideloading. A paid account ($99/yr) gets you a year and TestFlight.
 
 ---
 
+## Getting an `.ipa` file
+
+Which method applies depends on how you built. **Running the app from Xcode
+with ⌘R does not produce an `.ipa`** — it installs an unpacked `.app` straight
+onto the device. You have to archive it explicitly.
+
+### From an EAS cloud build (easiest)
+
+A cloud build already *is* an `.ipa`. Find it and download it:
+
+```bash
+eas build:list --platform ios --limit 5
+eas build:view          # or open the build page URL it prints
+```
+
+The build page has a **Download** button. Note that `eas build:download` is for
+simulator builds only — it will not fetch a device `.ipa`.
+
+### From an EAS local build
+
+Builds on your own Mac and writes the artefact wherever you point it:
+
+```bash
+eas build --platform ios --profile device --local --output ./TheoryofTime.ipa
+```
+
+### From Xcode
+
+1. In the device dropdown at the top, select **Any iOS Device (arm64)**.
+   Archive is greyed out while a simulator or a physical device is selected.
+2. **Product → Archive.** The Organizer window opens when it finishes.
+3. Select the archive → **Distribute App**.
+4. Choose a method. **Custom → Release Testing** produces an ad hoc `.ipa`;
+   **Custom → Debugging** produces a development one.
+5. Export. You get a folder containing `TheoryofTime.ipa`.
+
+> **Free Apple ID limitation.** Personal teams cannot issue distribution
+> certificates, so ad hoc and App Store export will fail. Development export
+> may work. If you need a reliable `.ipa`, use an EAS build or a paid developer
+> account.
+
+### The manual route
+
+An `.ipa` is just a zip with the `.app` inside a folder named `Payload`. If you
+already have a build in DerivedData:
+
+```bash
+cd ~/Library/Developer/Xcode/DerivedData/TheoryofTime-*/Build/Products/Release-iphoneos
+mkdir -p Payload
+cp -R TheoryofTime.app Payload/
+zip -r TheoryofTime.ipa Payload
+```
+
+This is genuinely useful for sideloading tools, which re-sign the archive with
+your own account anyway.
+
+### An `.ipa` is not portable
+
+This trips everyone up. An `.ipa` is signed for **specific devices** listed in
+its provisioning profile. Handing the file to someone else does not work — iOS
+refuses to install it on an unregistered device.
+
+To get it onto other people's phones you need one of:
+
+- **TestFlight** — the real answer for sharing. Requires a paid developer
+  account, then `eas build --profile production` and `eas submit`.
+- **Register their device** — add the UDID, then rebuild or use
+  `eas build:resign`.
+- **Sideloading tools** (AltStore, Sideloadly) — these re-sign the `.ipa` with
+  the recipient's own Apple ID on their machine, which sidesteps the profile.
+
+---
+
 ## If you insist on Xcode
 
 Run `./scripts/ios-setup.sh` from the repo root. It handles everything below
