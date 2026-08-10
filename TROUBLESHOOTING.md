@@ -85,6 +85,26 @@ Which method applies depends on how you built. **Running the app from Xcode
 with ⌘R does not produce an `.ipa`** — it installs an unpacked `.app` straight
 onto the device. You have to archive it explicitly.
 
+### For sideloading (AltStore, Sideloadly) — use this
+
+```bash
+./scripts/make-ipa.sh
+```
+
+Produces `build/TheoryofTime.ipa`, unsigned, in a couple of minutes.
+
+Unsigned is deliberate. Sideloading tools re-sign the archive with your own
+Apple ID before installing, so whatever signature the file arrives with is
+discarded. Building unsigned therefore needs no certificate, no provisioning
+profile and no paid account — and it sidesteps the fact that free Apple teams
+cannot issue distribution certificates at all.
+
+Pass `--signed` if you want it signed with your development team instead.
+
+A free Apple ID signature lasts 7 days. AltStore refreshes installed apps in
+the background over Wi-Fi whenever AltServer is running, which handles the
+expiry without you thinking about it.
+
 ### From an EAS cloud build (easiest)
 
 A cloud build already *is* an `.ipa`. Find it and download it:
